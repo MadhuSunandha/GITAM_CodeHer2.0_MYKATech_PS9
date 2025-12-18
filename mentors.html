@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EmpowerHer | Mentor Consultation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-indigo-50 flex min-h-screen">
+
+    <div class="w-64 bg-indigo-900 text-white flex flex-col fixed h-full shadow-2xl">
+        <div class="p-8 text-center border-b border-indigo-800">
+            <h1 class="text-2xl font-black tracking-tight">EmpowerHer</h1>
+        </div>
+        <nav class="flex-grow p-4 space-y-2 mt-4">
+            <a href="dashboard.html" class="flex items-center space-x-3 p-3 hover:bg-indigo-800 rounded-xl transition text-indigo-200"><i class="fas fa-user-circle w-5"></i> <span>Profile</span></a>
+            <a href="mentors.html" class="flex items-center space-x-3 p-3 bg-indigo-700 rounded-xl transition shadow-lg"><i class="fas fa-chalkboard-teacher w-5"></i> <span>Mentors</span></a>
+            <a href="opportunities.html" class="flex items-center space-x-3 p-3 hover:bg-indigo-800 rounded-xl transition text-indigo-200"><i class="fas fa-briefcase w-5"></i> <span>Opportunities</span></a>
+            <a href="resources.html" class="flex items-center space-x-3 p-3 hover:bg-indigo-800 rounded-xl transition text-indigo-200"><i class="fas fa-book-open w-5"></i> <span>Resources</span></a>
+        </nav>
+    </div>
+
+    <div class="ml-64 flex-grow p-10 flex flex-col items-center">
+        <div class="w-full max-w-3xl bg-white rounded-[3rem] shadow-2xl overflow-hidden flex flex-col h-[750px] border border-indigo-100">
+            
+            <div class="bg-indigo-900 p-6 flex items-center justify-between text-white">
+                <div class="flex items-center gap-4">
+                    <div id="m-avatar" class="w-14 h-14 bg-indigo-500 rounded-2xl flex items-center justify-center font-bold text-2xl">?</div>
+                    <div>
+                        <h3 id="m-name" class="text-xl font-bold">Mentor AI</h3>
+                        <p id="m-status" class="text-xs text-indigo-300 font-medium">Ready to guide your restart</p>
+                    </div>
+                </div>
+                <span class="text-xs font-black uppercase text-emerald-400 animate-pulse">Live Analysis</span>
+            </div>
+
+            <div id="chat-box" class="flex-grow p-8 overflow-y-auto space-y-6 bg-slate-50/50"></div>
+
+            <div id="input-area" class="p-6 bg-white border-t border-gray-100 flex gap-3">
+                <input type="text" id="user-input" placeholder="Share your thoughts..." class="flex-grow p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                <button onclick="handleSend()" class="bg-indigo-600 text-white px-8 rounded-2xl font-bold hover:bg-indigo-700 transition-all">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBgOgOrtS6P-oJj39UxOP5QjolPqc0cMJk",
+            authDomain: "myka-tech.firebaseapp.com",
+            projectId: "myka-tech",
+            storageBucket: "myka-tech.firebasestorage.app",
+            messagingSenderId: "922086084506",
+            appId: "1:922086084506:web:349fd90c68096ed7397423"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let currentStep = 0;
+        let userData = {};
+        let selectedPath = "";
+
+        // Dynamic Questions based on User Role 
+        const studentQ = [
+            "What subjects in your current degree truly excite you?",
+            "If you could pivot to any passion right now, what would it be?",
+            "How is the support at home for this switch?",
+            "Is your mental health prepared for this new challenge?"
+        ];
+
+        const motherQ = [
+            "Managing a household builds incredible skills. What part of your daily routine (finance, cooking, organizing) do you enjoy most?",
+            "Many mothers find success in flexible business models. Which path interests you for a restart?",
+            "What are your preferred working hours given your family responsibilities?",
+            "Are you looking for a full-time return or a micro-entrepreneurship start?"
+        ];
+
+        window.onload = async () => {
+            const email = localStorage.getItem('userEmail');
+            const snap = await getDoc(doc(db, "users", email));
+            if(snap.exists()){
+                userData = snap.data();
+                document.getElementById('m-name').innerText = userData.userRole === 'mother' ? "Meera (Restart Coach)" : "Dr. Sarah (Career Mentor)";
+                document.getElementById('m-avatar').innerText = "M";
+                const initialMsg = userData.userRole === 'mother' ? 
+                    `Hi ${userData.name}! It's never too late to restart. ${motherQ[0]}` : 
+                    `Hi ${userData.name}! Let's talk about your B.Tech journey. ${studentQ[0]}`;
+                addMessage('mentor', initialMsg);
+            }
+        };
+
+        window.handleSend = () => {
+            const text = document.getElementById('user-input').value.trim();
+            if(!text && currentStep !== 1) return;
+            if(text) addMessage('user', text);
+            document.getElementById('user-input').value = "";
+            currentStep++;
+
+            setTimeout(() => {
+                if(currentStep === 1) {
+                    addMessage('mentor', "Select a path you'd like to explore:", true);
+                    document.getElementById('input-area').style.display = 'none';
+                } else if(currentStep < 4) {
+                    const q = userData.userRole === 'mother' ? motherQ[currentStep] : studentQ[currentStep];
+                    addMessage('mentor', q);
+                } else {
+                    finishSession();
+                }
+            }, 1000);
+        };
+
+        window.setPivot = (path) => {
+            selectedPath = path;
+            addMessage('user', `I am interested in ${path}`);
+            document.getElementById('input-area').style.display = 'flex';
+            window.handleSend();
+        };
+
+        async function finishSession() {
+            addMessage('mentor', "Analyzing your profile and availability... 🧠");
+            const email = localStorage.getItem('userEmail');
+            const finalRec = selectedPath || userData.futureInterest;
+            
+            // Set opportunity filter based on choice
+            const filter = (selectedPath === "Cricket" || selectedPath === "Football") ? "SportsAction" : "Corporate";
+
+            await updateDoc(doc(db, "users", email), {
+                mentorRecommendation: finalRec,
+                opportunityFilter: filter,
+                counselingComplete: true
+            });
+
+            setTimeout(() => {
+                addMessage('mentor', `**Plan Ready!** I've mapped out a journey in **${finalRec}**. Check your Opportunities tab for specific matches for your role! 🚀`);
+                document.getElementById('input-area').innerHTML = `<button onclick="window.location.href='opportunities.html'" class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold">Explore My Path</button>`;
+            }, 2000);
+        }
+
+        function addMessage(sender, text, isPivot = false) {
+            const box = document.getElementById('chat-box');
+            const wrapper = document.createElement('div');
+            wrapper.className = sender === 'mentor' ? 'flex justify-start' : 'flex justify-end';
+            
+            let html = `<div class="p-5 rounded-3xl max-w-[85%] font-medium ${sender === 'mentor' ? 'bg-white text-indigo-900 border border-slate-100' : 'bg-indigo-600 text-white'}">
+                ${text}
+                ${isPivot ? `
+                    <div class="mt-4 grid grid-cols-2 gap-2">
+                        <button onclick="setPivot('Cricket')" class="p-3 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-bold hover:bg-indigo-100">Cricket</button>
+                        <button onclick="setPivot('Cooking')" class="p-3 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-bold hover:bg-indigo-100">Culinary Arts</button>
+                        <button onclick="setPivot('Business')" class="p-3 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-bold hover:bg-indigo-100">Small Business</button>
+                        <button onclick="setPivot('Tech')" class="p-3 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-bold hover:bg-indigo-100">Work from Home</button>
+                    </div>` : ''}
+            </div>`;
+            
+            wrapper.innerHTML = html;
+            box.appendChild(wrapper);
+            box.scrollTop = box.scrollHeight;
+        }
+    </script>
+</body>
+</html>

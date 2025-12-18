@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resources Hub | EmpowerHer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-indigo-50 flex min-h-screen">
+
+    <div class="w-64 bg-indigo-900 text-white flex flex-col fixed h-full shadow-2xl">
+        <div class="p-8 text-center border-b border-indigo-800">
+            <h1 class="text-2xl font-black tracking-tight">EmpowerHer</h1>
+        </div>
+        <nav class="flex-grow p-4 space-y-2 mt-4">
+            <a href="dashboard.html" class="flex items-center space-x-3 p-3 hover:bg-indigo-800 rounded-xl transition text-indigo-200">
+                <i class="fas fa-user-circle w-5"></i> <span>Profile</span>
+            </a>
+            <a href="mentors.html" class="flex items-center space-x-3 p-3 hover:bg-indigo-800 rounded-xl transition text-indigo-200">
+                <i class="fas fa-chalkboard-teacher w-5"></i> <span>Mentors</span>
+            </a>
+            <a href="opportunities.html" class="flex items-center space-x-3 p-3 hover:bg-indigo-800 rounded-xl transition text-indigo-200">
+                <i class="fas fa-briefcase w-5"></i> <span>Opportunities</span>
+            </a>
+            <a href="resources.html" class="flex items-center space-x-3 p-3 bg-indigo-700 rounded-xl transition shadow-lg">
+                <i class="fas fa-book-open w-5"></i> <span>Resources</span>
+            </a>
+        </nav>
+        <div class="p-4 border-t border-indigo-800">
+            <button onclick="logout()" class="flex items-center space-x-3 p-3 w-full text-red-400 hover:bg-red-900/20 rounded-xl transition">
+                <i class="fas fa-sign-out-alt w-5"></i> <span>Logout</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="ml-64 flex-grow p-10">
+        <div class="max-w-6xl mx-auto">
+            <header class="mb-10 flex justify-between items-end">
+                <div>
+                    <h2 class="text-4xl font-black text-indigo-900 tracking-tight">Learning Center</h2>
+                    <p id="res-subtitle" class="text-indigo-600 mt-2 font-medium">Empowering you with the right knowledge.</p>
+                </div>
+                <div id="verified-badge"></div>
+            </header>
+
+            <div id="resource-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBgOgOrtS6P-oJj39UxOP5QjolPqc0cMJk",
+            authDomain: "myka-tech.firebaseapp.com",
+            projectId: "myka-tech",
+            storageBucket: "myka-tech.firebasestorage.app",
+            messagingSenderId: "922086084506",
+            appId: "1:922086084506:web:349fd90c68096ed7397423"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Dynamic Library for Students and Career Restarters
+        const resourceMap = {
+            "Tech": [
+                { title: "React for Beginners", author: "FreeCodeCamp", type: "Video Course", icon: "fa-code", color: "bg-blue-50 text-blue-600" },
+                { title: "System Design PDF", author: "Grokking", type: "Textbook", icon: "fa-book-open", color: "bg-indigo-50 text-indigo-600" }
+            ],
+            "Cooking": [
+                { title: "Cloud Kitchen Business", author: "Startup Guide", type: "Business PDF", icon: "fa-utensils", color: "bg-orange-50 text-orange-600" },
+                { title: "Culinary Arts 101", author: "Masterchef Academy", type: "Video Tutorial", icon: "fa-fire", color: "bg-yellow-50 text-yellow-600" }
+            ],
+            "Cricket": [
+                { title: "Data Analytics in Sports", author: "Coursera", type: "Specialization", icon: "fa-chart-line", color: "bg-emerald-50 text-emerald-600" },
+                { title: "Fielding & Agility", author: "Coaching Manual", type: "Training Guide", icon: "fa-running", color: "bg-amber-50 text-amber-600" }
+            ],
+            "Business": [
+                { title: "Digital Marketing for Moms", author: "Skillshare", type: "Quick Video", icon: "fa-bullhorn", color: "bg-rose-50 text-rose-600" },
+                { title: "Small Business Finance", author: "MSME India", type: "Guidebook", icon: "fa-calculator", color: "bg-emerald-50 text-emerald-600" }
+            ]
+        };
+
+        window.onload = async () => {
+            const email = localStorage.getItem('userEmail');
+            const snap = await getDoc(doc(db, "users", email));
+
+            if (snap.exists()) {
+                const data = snap.data();
+                const path = data.mentorRecommendation || data.futureInterest || "Tech";
+                const role = data.userRole || "student";
+
+                document.getElementById('res-subtitle').innerText = `Resources for your ${path} path (${role === 'mother' ? 'Focus: Quick Learning' : 'Focus: Academic Depth'})`;
+
+                if(data.mentorRecommendation) {
+                    document.getElementById('verified-badge').innerHTML = `
+                        <div class="bg-white border border-emerald-200 px-4 py-2 rounded-2xl flex items-center gap-2 shadow-sm">
+                            <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                            <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Mentor Recommended</span>
+                        </div>`;
+                }
+
+                const grid = document.getElementById('resource-grid');
+                const items = resourceMap[path] || resourceMap["Tech"];
+
+                grid.innerHTML = items.map(res => `
+                    <div class="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500 group relative overflow-hidden">
+                        <div class="relative z-10">
+                            <div class="w-16 h-16 ${res.color} rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+                                <i class="fas ${res.icon}"></i>
+                            </div>
+                            <span class="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-2 block">${res.type}</span>
+                            <h4 class="text-2xl font-bold text-slate-800 mb-1 leading-tight">${res.title}</h4>
+                            <p class="text-slate-500 text-sm mb-8 font-medium italic">By ${res.author}</p>
+                            
+                            <button class="w-full py-4 bg-indigo-50 text-indigo-700 font-black rounded-2xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                                Open Material
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        };
+
+        window.logout = () => { localStorage.clear(); window.location.href = 'index.html'; };
+    </script>
+</body>
+</html>

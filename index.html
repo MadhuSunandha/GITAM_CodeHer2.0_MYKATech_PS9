@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EmpowerHer | Join the Community</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-indigo-50 min-h-screen flex items-center justify-center p-4 font-sans">
+
+    <div class="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl p-10 border border-gray-100 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-100 rounded-bl-full opacity-50"></div>
+
+        <div class="text-center mb-8 relative z-10">
+            <h1 class="text-5xl font-black text-indigo-900 tracking-tighter">EmpowerHer</h1>
+            <p id="subtitle" class="text-indigo-600 mt-3 font-semibold text-lg">Every woman's journey is unique. Start yours today.</p>
+        </div>
+
+        <div class="flex bg-gray-100 p-2 rounded-2xl mb-10 max-w-sm mx-auto">
+            <button id="tab-signin" onclick="toggleAuthMode('signin')" class="w-1/2 py-3 text-sm font-black rounded-xl transition-all text-gray-500">Sign In</button>
+            <button id="tab-signup" onclick="toggleAuthMode('signup')" class="w-1/2 py-3 text-sm font-black rounded-xl transition-all bg-white text-indigo-900 shadow-md">Sign Up</button>
+        </div>
+
+        <form id="authForm" class="space-y-6 relative z-10">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="space-y-1">
+                    <label class="text-[11px] font-black text-indigo-400 uppercase tracking-widest ml-1">Email Address</label>
+                    <input type="email" id="email" required class="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-100 outline-none transition-all" placeholder="name@example.com">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[11px] font-black text-indigo-400 uppercase tracking-widest ml-1">Password</label>
+                    <input type="password" id="password" required class="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-100 outline-none transition-all" placeholder="••••••••">
+                </div>
+            </div>
+
+            <div id="signup-extra" class="space-y-5 animate-in fade-in duration-500">
+                <div class="h-[1px] bg-gray-100 w-full my-6"></div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <input type="text" id="fullname" placeholder="Full Name" class="p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none">
+                    
+                    <select id="userRole" onchange="adaptFormToRole()" class="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl outline-none font-bold text-indigo-900 cursor-pointer">
+                        <option value="student">I am a Student</option>
+                        <option value="mother">I am a Mother / Homemaker</option>
+                        <option value="professional">I am a Working Professional</option>
+                    </select>
+                </div>
+
+                <div id="student-inputs" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <input type="text" id="education" placeholder="Current Degree (e.g. B.Tech)" class="p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none">
+                    <input type="number" id="passout" placeholder="Passing Year" class="p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none">
+                    <input type="text" id="marks" placeholder="Academic Marks (%)" class="p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none col-span-full">
+                </div>
+
+                <div id="mother-inputs" class="hidden grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <input type="text" id="prev_field" placeholder="Previous Expertise (if any)" class="p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none">
+                    <input type="number" id="break_years" placeholder="Years of Career Break" class="p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none">
+                    <textarea id="home_skills" placeholder="Skills you've managed (e.g. Finance, Event Planning, Teaching)" class="p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none col-span-full h-24"></textarea>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[11px] font-black text-indigo-400 uppercase tracking-widest ml-1">Goal Interest</label>
+                    <select id="reg-interest" class="w-full p-4 bg-indigo-900 text-white rounded-2xl outline-none font-bold shadow-lg">
+                        <option value="">What is your current goal?</option>
+                        <option value="Tech">Tech / Remote Work</option>
+                        <option value="Cooking">Culinary / Cloud Kitchen</option>
+                        <option value="Business">Entrepreneurship / Small Biz</option>
+                        <option value="Arts">Creative Arts / Fashion</option>
+                        <option value="Cricket">Sports / Physical Education</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" id="submit-btn" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-xl hover:bg-indigo-700 shadow-2xl shadow-indigo-100 transition-all transform active:scale-95">
+                Create My Account
+            </button>
+        </form>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBgOgOrtS6P-oJj39UxOP5QjolPqc0cMJk",
+            authDomain: "myka-tech.firebaseapp.com",
+            projectId: "myka-tech",
+            storageBucket: "myka-tech.firebasestorage.app",
+            messagingSenderId: "922086084506",
+            appId: "1:922086084506:web:349fd90c68096ed7397423"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let isSignUpMode = true;
+
+        window.toggleAuthMode = (mode) => {
+            isSignUpMode = (mode === 'signup');
+            const extra = document.getElementById('signup-extra');
+            const btn = document.getElementById('submit-btn');
+            const tabIn = document.getElementById('tab-signin');
+            const tabUp = document.getElementById('tab-signup');
+
+            if (mode === 'signin') {
+                extra.classList.add('hidden');
+                btn.innerText = "Welcome Back";
+                tabIn.className = "w-1/2 py-3 text-sm font-black rounded-xl bg-white text-indigo-900 shadow-md";
+                tabUp.className = "w-1/2 py-3 text-sm font-black rounded-xl text-gray-500";
+            } else {
+                extra.classList.remove('hidden');
+                btn.innerText = "Start My Journey";
+                tabUp.className = "w-1/2 py-3 text-sm font-black rounded-xl bg-white text-indigo-900 shadow-md";
+                tabIn.className = "w-1/2 py-3 text-sm font-black rounded-xl text-gray-500";
+            }
+        };
+
+        window.adaptFormToRole = () => {
+            const role = document.getElementById('userRole').value;
+            const studentSection = document.getElementById('student-inputs');
+            const motherSection = document.getElementById('mother-inputs');
+
+            if (role === 'mother') {
+                studentSection.classList.add('hidden');
+                motherSection.classList.remove('hidden');
+            } else {
+                studentSection.classList.remove('hidden');
+                motherSection.classList.add('hidden');
+            }
+        };
+
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim().toLowerCase();
+
+            if (isSignUpMode) {
+                const role = document.getElementById('userRole').value;
+                const userData = {
+                    email: email,
+                    userRole: role,
+                    name: document.getElementById('fullname').value,
+                    futureInterest: document.getElementById('reg-interest').value,
+                    // Student data
+                    education: document.getElementById('education').value || "N/A",
+                    passYear: document.getElementById('passout').value || "N/A",
+                    marks: document.getElementById('marks').value || "N/A",
+                    // Mother/Professional data
+                    breakYears: document.getElementById('break_years').value || 0,
+                    skills: document.getElementById('home_skills').value || ""
+                };
+
+                await setDoc(doc(db, "users", email), userData);
+            }
+            
+            localStorage.setItem('userEmail', email);
+            window.location.href = 'dashboard.html';
+        });
+    </script>
+</body>
+</html>

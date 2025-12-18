@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opportunities Hub | EmpowerHer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-indigo-50 flex min-h-screen">
+
+    <div class="w-64 bg-indigo-900 text-white flex flex-col fixed h-full shadow-2xl">
+        <div class="p-8 text-center border-b border-indigo-800">
+            <h1 class="text-2xl font-black tracking-tight">EmpowerHer</h1>
+        </div>
+        <nav class="flex-grow p-4 space-y-2 mt-4">
+            <a href="dashboard.html" class="flex items-center space-x-3 p-3 hover:bg-indigo-800 rounded-xl transition text-indigo-200">
+                <i class="fas fa-user-circle w-5"></i> <span>Profile</span>
+            </a>
+            <a href="mentors.html" class="flex items-center space-x-3 p-3 hover:bg-indigo-800 rounded-xl transition text-indigo-200">
+                <i class="fas fa-chalkboard-teacher w-5"></i> <span>Mentors</span>
+            </a>
+            <a href="opportunities.html" class="flex items-center space-x-3 p-3 bg-indigo-700 rounded-xl transition shadow-lg">
+                <i class="fas fa-briefcase w-5"></i> <span>Opportunities</span>
+            </a>
+            <a href="resources.html" class="flex items-center space-x-3 p-3 hover:bg-indigo-800 rounded-xl transition text-indigo-200">
+                <i class="fas fa-book-open w-5"></i> <span>Resources</span>
+            </a>
+        </nav>
+        <div class="p-4 border-t border-indigo-800">
+            <button onclick="logout()" class="flex items-center space-x-3 p-3 w-full text-red-400 hover:bg-red-900/20 rounded-xl transition">
+                <i class="fas fa-sign-out-alt w-5"></i> <span>Logout</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="ml-64 flex-grow p-10">
+        <div class="max-w-6xl mx-auto">
+            <header class="mb-10 flex justify-between items-end">
+                <div>
+                    <h2 id="page-title" class="text-4xl font-black text-indigo-900 tracking-tight">Career Opportunities</h2>
+                    <p id="path-desc" class="text-indigo-600 mt-2 font-medium italic">Fetching your personalized matches...</p>
+                </div>
+                <div id="mentor-badge"></div>
+            </header>
+
+            <div id="opp-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBgOgOrtS6P-oJj39UxOP5QjolPqc0cMJk",
+            authDomain: "myka-tech.firebaseapp.com",
+            projectId: "myka-tech",
+            storageBucket: "myka-tech.firebasestorage.app",
+            messagingSenderId: "922086084506",
+            appId: "1:922086084506:web:349fd90c68096ed7397423"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Comprehensive Opportunities Database including Leagues and Coaching
+        const globalOpps = {
+            "CSE": [
+                { title: "Junior SDE", co: "Google", type: "Job", icon: "fa-code", color: "bg-blue-50 text-blue-600", btn: "Apply Now" },
+                { title: "UI/UX Intern", co: "Adobe", type: "Internship", icon: "fa-pen-nib", color: "bg-purple-50 text-purple-600", btn: "Apply Now" }
+            ],
+            "Cricket": [
+                { title: "Inter-State Selection", co: "State League", type: "League", icon: "fa-bat-ball", color: "bg-amber-50 text-amber-600", btn: "Join League" },
+                { title: "NCA Level 1 Coaching", co: "Cricket Academy", type: "Coaching", icon: "fa-whistle", color: "bg-sky-50 text-sky-600", btn: "Get Certified" },
+                { title: "T20 Talent Search", co: "IPL Scouting", type: "Competition", icon: "fa-medal", color: "bg-emerald-50 text-emerald-600", btn: "Register" }
+            ],
+            "Gym & Wellness": [
+                { title: "Certified Yoga Instructor", co: "Cult.fit", type: "Coaching", icon: "fa-spa", color: "bg-indigo-50 text-indigo-600", btn: "Get Certified" },
+                { title: "Nutrition Consultant", co: "HealthifyMe", type: "Job", icon: "fa-apple-alt", color: "bg-rose-50 text-rose-600", btn: "Apply Now" }
+            ],
+            "Cooking": [
+                { title: "Michelin Star Trainee", co: "Taj Hotels", type: "Internship", icon: "fa-utensils", color: "bg-orange-50 text-orange-600", btn: "Start Internship" },
+                { title: "National Chef Contest", co: "Culinary Federation", type: "Competition", icon: "fa-trophy", color: "bg-yellow-50 text-yellow-600", btn: "Join Contest" }
+            ]
+        };
+
+        window.onload = async () => {
+            const email = localStorage.getItem('userEmail');
+            if (!email) { window.location.href = 'index.html'; return; }
+
+            const docSnap = await getDoc(doc(db, "users", email));
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                
+                // Switch between Corporate/Academic and Sports/Action views
+                const activePath = data.mentorRecommendation || data.futureInterest || "CSE";
+                const isSports = data.opportunityFilter === "SportsAction";
+
+                // Update UI based on pivot 
+                document.getElementById('page-title').innerText = isSports ? "Action & Performance Hub" : "Career Opportunities";
+                document.getElementById('path-desc').innerText = `Displaying ${activePath} opportunities tailored for you.`;
+
+                if(data.mentorRecommendation) {
+                    document.getElementById('mentor-badge').innerHTML = `
+                        <div class="px-5 py-2 bg-emerald-500 text-white rounded-2xl text-[10px] font-black tracking-widest shadow-lg animate-bounce">
+                            MENTOR RECOMMENDED PATH
+                        </div>`;
+                }
+
+                const grid = document.getElementById('opp-grid');
+                const items = globalOpps[activePath] || globalOpps["CSE"];
+
+                grid.innerHTML = items.map(item => `
+                    <div class="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-300 group flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-6">
+                                <div class="w-14 h-14 ${item.color} rounded-2xl flex items-center justify-center text-2xl group-hover:rotate-12 transition-transform">
+                                    <i class="fas ${item.icon}"></i>
+                                </div>
+                                <span class="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-slate-50 text-slate-400 rounded-full border border-slate-100">
+                                    ${item.type}
+                                </span>
+                            </div>
+                            <h4 class="text-2xl font-bold text-slate-800 mb-1">${item.title}</h4>
+                            <p class="text-indigo-600 font-bold mb-4">${item.co}</p>
+                            <p class="text-slate-500 text-sm leading-relaxed mb-8">
+                                Personalized for your background in ${data.education}. This matches your recent pivot to ${activePath}.
+                            </p>
+                        </div>
+                        <button class="w-full py-4 bg-indigo-600 text-white font-black rounded-2xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 transition-all">
+                            ${item.btn}
+                        </button>
+                    </div>
+                `).join('');
+            }
+        };
+
+        window.logout = () => { localStorage.clear(); window.location.href = 'index.html'; };
+    </script>
+</body>
+</html>
