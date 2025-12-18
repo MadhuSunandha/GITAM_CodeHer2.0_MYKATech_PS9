@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Find a Mentor | EmpowerHer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-indigo-50 flex min-h-screen">
+
+    <div class="w-64 bg-indigo-900 text-white flex flex-col fixed h-full shadow-2xl">
+        <div class="p-8 text-center border-b border-indigo-800">
+            <h1 class="text-2xl font-black tracking-tight">EmpowerHer</h1>
+        </div>
+        <nav class="flex-grow p-4 space-y-2 mt-4">
+            <a href="dashboard.html" class="flex items-center space-x-3 p-3 hover:bg-indigo-800 rounded-xl transition text-indigo-200 hover:text-white">
+                <i class="fas fa-user-circle w-5"></i> <span>Profile</span>
+            </a>
+            <a href="mentors.html" class="flex items-center space-x-3 p-3 bg-indigo-700 rounded-xl transition">
+                <i class="fas fa-chalkboard-teacher w-5"></i> <span>Mentors</span>
+            </a>
+            <a href="#" class="flex items-center space-x-3 p-3 hover:bg-indigo-800 rounded-xl transition text-indigo-200 hover:text-white">
+                <i class="fas fa-book-open w-5"></i> <span>Resources</span>
+            </a>
+        </nav>
+    </div>
+
+    <div class="ml-64 flex-grow p-10">
+        <div class="max-w-3xl mx-auto">
+            <header class="mb-10 text-center">
+                <h2 class="text-4xl font-black text-indigo-900">Find Your Mentor</h2>
+                <p class="text-indigo-600 mt-2">Answer the questions below to be assigned a mentor.</p>
+            </header>
+
+            <div id="quiz-card" class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-3">What is your dream career field?</label>
+                        <select id="field" class="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none">
+                            <option value="Tech">Technology / Engineering</option>
+                            <option value="Medical">Medical / Healthcare</option>
+                            <option value="Business">Business / Finance</option>
+                        </select>
+                    </div>
+                    <button onclick="assignMentor()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition shadow-lg">
+                        Get My Mentor
+                    </button>
+                </div>
+            </div>
+
+            <div id="result-card" class="hidden bg-white rounded-3xl shadow-2xl p-8 text-center border-2 border-indigo-100">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Your Assigned Mentor</h3>
+                <div class="bg-indigo-50 p-6 rounded-3xl mb-4">
+                    <p id="mentorName" class="text-3xl font-black text-indigo-700">Name</p>
+                    <p id="mentorRole" class="text-indigo-500 font-medium">Role</p>
+                </div>
+                <button onclick="location.reload()" class="text-indigo-600 font-bold">Restart Quiz</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function assignMentor() {
+            const field = document.getElementById('field').value;
+            let name, role;
+
+            if(field === "Tech") { name = "Dr. Sarah Chen"; role = "Senior Engineer at Microsoft"; }
+            else if(field === "Medical") { name = "Dr. Aditi Rao"; role = "Chief Surgeon at City Hospital"; }
+            else { name = "Meera Kapoor"; role = "CEO of Alpha Finance"; }
+
+            document.getElementById('quiz-card').classList.add('hidden');
+            document.getElementById('result-card').classList.remove('hidden');
+            document.getElementById('mentorName').innerText = name;
+            document.getElementById('mentorRole').innerText = role;
+        }
+    </script>
+</body>
+</html>
